@@ -1,20 +1,25 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Feed Phantom
 
-# Run and deploy your AI Studio app
+Feed Phantom is a dark, atmospheric, and mysterious endless stealth runner game set on the Base Mainnet.
 
-This contains everything you need to run your app locally.
+## Overview
+You are a Feed Phantom—a digital ghost trapped inside the endless scroll of the internet. Navigate silently through the feed, avoid being detected by algorithms and toxic users, and collect Lost Echoes (forgotten posts, deleted comments, suppressed memories) to uncover the truth behind the Great Feed.
 
-View your app in AI Studio: https://ai.studio/apps/dbdab369-b50a-4650-9c8b-2df9147dd0da
+## Features
+- **Stealth Runner**: Navigate through an endless environment by avoiding detection zones and posts.
+- **Lost Echoes**: Collect points and lore as you traverse deeper.
+- **On-chain Integration**: Native Game on Base Mainnet. Score deeper than anyone else and sign your high scores on-chain.
+- **Hybrid Leaderboard**: Records and displays top Phantom runners via ERC-8021 tracking.
+- **ERC-8004 AI Agents**: AI Agents (Algorithm Watchers) analyze the feed dynamically.
 
-## Run Locally
+## Developer Instructions
+- Environment Variables. Set up your Base mainnet capabilities correctly. **DO NOT** commit real private keys or environment variables such as `.env` into source control. Keep `.env.example` as the schema.
+- **To Start Development**: `npm run dev`
+- **To Build**: `npm run build`
 
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Architecture & Integration
+- Uses **Next.js/React + Vite** framework.
+- Wagmi + Viem for Wallet connections.
+- Framer Motion for glitch and Phantom Shift animations.
+- Canvas-based movement mechanics optimized for mobile touch.
+- **Feed Phantom Orchestrator**: The backend is overseen by an AI Agent accessible via `/api/mcp`. See `public/.well-known/agent-card.json` for details.
