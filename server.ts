@@ -17,6 +17,30 @@ async function startServer() {
       status: "active",
       description: "Active MCP server for Feed Phantom Orchestrator Agent",
       capabilities: ["phantom-feed-management", "invisible-content-orchestration", "ghost-mode-automation"],
+      tools: [
+        {
+          name: "execute_ghost_mode",
+          description: "Triggers phantom ghost mode",
+          inputSchema: { type: "object", properties: {} }
+        },
+        {
+          name: "fetch_lost_echoes",
+          description: "Fetches lost echoes from the system",
+          inputSchema: { type: "object", properties: {} }
+        }
+      ],
+      prompts: [
+        {
+          name: "phantom-status",
+          description: "Check the status of the Phantom"
+        }
+      ],
+      resources: [
+        {
+          uri: "feed://current-state",
+          name: "Current Feed State"
+        }
+      ],
       timestamp: new Date().toISOString()
     });
   });
