@@ -1,5 +1,13 @@
 export default function handler(req: any, res: any) {
+  // CORS Headers applied via vercel.json, but kept here for local dev
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method === 'GET') {
     res.status(200).json({
       protocol: "MCP",
@@ -10,13 +18,28 @@ export default function handler(req: any, res: any) {
       capabilities: ["phantom-feed-management", "invisible-content-orchestration", "ghost-mode-automation"],
       tools: [
         {
-          name: "execute_ghost_mode",
-          description: "Triggers phantom ghost mode",
+          name: "get_race_status",
+          description: "Get the current phantom feed phase status (adapted for Feed Phantom)",
           inputSchema: { type: "object", properties: {} }
         },
         {
-          name: "fetch_lost_echoes",
-          description: "Fetches lost echoes from the system",
+          name: "start_race",
+          description: "Initiate a new phantom run through the feed",
+          inputSchema: { type: "object", properties: {} }
+        },
+        {
+          name: "get_leaderboard",
+          description: "Retrieve highest reaching phantom runners from Base mainnet",
+          inputSchema: { type: "object", properties: {} }
+        },
+        {
+          name: "optimize_speed",
+          description: "Optimize stealth speed during the phantom shift",
+          inputSchema: { type: "object", properties: {} }
+        },
+        {
+          name: "get_track_info",
+          description: "Get data on the current corrupted algorithms in the feed",
           inputSchema: { type: "object", properties: {} }
         }
       ],

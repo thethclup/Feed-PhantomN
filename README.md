@@ -1,25 +1,46 @@
 # Feed Phantom
 
-Feed Phantom is a dark, atmospheric, and mysterious endless stealth runner game set on the Base Mainnet.
-
-## Overview
-You are a Feed Phantom—a digital ghost trapped inside the endless scroll of the internet. Navigate silently through the feed, avoid being detected by algorithms and toxic users, and collect Lost Echoes (forgotten posts, deleted comments, suppressed memories) to uncover the truth behind the Great Feed.
+Feed Phantom is a dark, atmospheric stealth endless runner on Base Mainnet. Hide from algorithms, collect lost echoes, and record your runs on-chain.
 
 ## Features
-- **Stealth Runner**: Navigate through an endless environment by avoiding detection zones and posts.
-- **Lost Echoes**: Collect points and lore as you traverse deeper.
-- **On-chain Integration**: Native Game on Base Mainnet. Score deeper than anyone else and sign your high scores on-chain.
-- **Hybrid Leaderboard**: Records and displays top Phantom runners via ERC-8021 tracking.
-- **ERC-8004 AI Agents**: AI Agents (Algorithm Watchers) analyze the feed dynamically.
+- **Stealth Mechanics:** Manage visibility and utilize Ghost Mode to evade detection.
+- **Lost Echoes:** Collect forgotten bits of algorithmic history.
+- **On-chain Integration & Leaderboards:** Sign transactions directly on the Base network to record your deepest scroll depth via ERC-8021 tracking.
+- **AI Orchestration:** Backend automation via an ERC-8004 AI Agent. MCP active.
 
-## Developer Instructions
-- Environment Variables. Set up your Base mainnet capabilities correctly. **DO NOT** commit real private keys or environment variables such as `.env` into source control. Keep `.env.example` as the schema.
-- **To Start Development**: `npm run dev`
-- **To Build**: `npm run build`
+## Technical Stack
+- **Framework:** React / Vite (Full-stack Express configuration)
+- **Web3 Integration:** Wagmi, Viem, Base Mainnet
+- **Styling:** Tailwind CSS, Framer Motion for glitch and Phantom Shift mechanics.
+- **AI Agent Protocol:** ERC-8004 Metadata & MCP (Model Context Protocol)
 
-## Architecture & Integration
-- Uses **Next.js/React + Vite** framework.
-- Wagmi + Viem for Wallet connections.
-- Framer Motion for glitch and Phantom Shift animations.
-- Canvas-based movement mechanics optimized for mobile touch.
-- **Feed Phantom Orchestrator**: The backend is overseen by an AI Agent accessible via `/api/mcp`. See `public/.well-known/agent-card.json` for details.
+## Setup & Local Development
+1. Clone the repository and run `npm install`.
+2. Configure environment variables using the `.env.example` as a reference.
+3. Start the local server: `npm run dev`
+4. Production Building: `npm run build` followed by `npm run start`
+
+## Agent Architecture
+Feed Phantom operates with an integrated **Feed Phantom Orchestrator** agent (ERC-8004 compliant). 
+
+### Capabilities listed via Agent Card
+- phantom-feed-management
+- invisible-content-orchestration
+- ghost-mode-automation
+- multi-feed-management
+- silent-curation
+- stealth-operations
+- mcp-command-execution
+
+### MCP Tools available
+- `get_race_status`
+- `start_race`
+- `get_leaderboard`
+- `optimize_speed`
+- `get_track_info`
+
+### Connectivity Locations
+- **Agent Card Registration:** Served entirely statically at `/.well-known/agent-card.json`
+- **MCP Command Endpoint:** `https://feedphantom.vercel.app/api/mcp`
+- **Agent INFO API:** `https://feedphantom.vercel.app/api/agent`
+
