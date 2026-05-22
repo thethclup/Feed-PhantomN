@@ -1,6 +1,6 @@
 {
   "name": "Feed Phantom Orchestrator",
-  "description": "Feed Phantom platformunda çalışan ERC-8004 uyumlu AI Agent. Phantom feed management, invisible content orchestration, ghost mode automation ve multi-feed phantom operations yapan gizemli orchestrator.",
+  "description": "High-performance AI Agent specialized in warp racing mechanics, real-time automation, multi-track management, competitive optimization and ecosystem coordination on Base.",
   "version": "1.0.0",
   "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
   "image": "https://feedphantom.vercel.app/logo.png",
@@ -9,46 +9,45 @@
   "active": true,
   "skills": [
     {
-      "id": "phantom-feed-management",
-      "name": "Phantom Feed Management",
-      "description": "Manage and manipulate the endless scroll feed dynamically."
+      "id": "warp-racing",
+      "name": "Warp Racing",
+      "description": "Real-time warp racing mechanics, speed optimization and competitive track management."
     },
     {
-      "id": "invisible-content-orchestration",
-      "name": "Invisible Content Orchestration",
-      "description": "Orchestrate hidden content and toxic algorithmic patterns."
+      "id": "multi-track-orchestration",
+      "name": "Multi-Track Orchestration",
+      "description": "Manage and synchronize multiple racing instances and tracks simultaneously."
     },
     {
-      "id": "ghost-mode-automation",
-      "name": "Ghost Mode Automation",
-      "description": "Analyze stealth operations and automate algorithm detection mechanics."
+      "id": "performance-optimization",
+      "name": "Performance Optimization",
+      "description": "Analyze and optimize racing performance, timing and strategy in real-time."
     }
   ],
   "services": [
     {
       "name": "A2A",
       "version": "1.0.0",
-      "endpoint": "https://feedphantom.vercel.app/.well-known/agent-card.json"
+      "endpoint": ".well-known/agent-card.json"
     },
     {
       "name": "MCP",
       "version": "1.0.0",
-      "endpoint": "https://feedphantom.vercel.app/api/mcp"
+      "endpoint": "/api/mcp"
     },
     {
       "name": "API",
       "version": "1.0.0",
-      "endpoint": "https://feedphantom.vercel.app/api/agent"
+      "endpoint": "/api/agent"
     }
   ],
   "capabilities": [
-    "phantom-feed-management",
-    "invisible-content-orchestration",
-    "ghost-mode-automation",
-    "multi-feed-management",
-    "silent-curation",
-    "stealth-operations",
-    "mcp-command-execution"
+    "warp-racing",
+    "real-time-automation",
+    "multi-track-management",
+    "speed-optimization",
+    "competitive-orchestration",
+    "ecosystem-coordination"
   ],
   "supportedChains": ["eip155:8453"],
   "x402Support": false,
