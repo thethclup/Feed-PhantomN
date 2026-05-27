@@ -62,7 +62,106 @@ async function startServer() {
 
   app.post("/api/mcp", (req, res) => {
     try {
-      const { action, command, params } = req.body;
+      const body = req.body;
+      
+      // Check if this is a standard JSON-RPC MCP request
+      if (body && (body.jsonrpc === "2.0" || body.method)) {
+        const method = body.method;
+        
+        if (method === "tools/list") {
+          return res.json({
+            jsonrpc: "2.0",
+            id: body.id,
+            result: {
+              tools: [
+                {
+                  name: "get_race_status",
+                  description: "Get the current phantom feed phase status (adapted for Feed Phantom)",
+                  inputSchema: { type: "object", properties: {} }
+                },
+                {
+                  name: "start_race",
+                  description: "Initiate a new phantom run through the feed",
+                  inputSchema: { type: "object", properties: {} }
+                },
+                {
+                  name: "get_leaderboard",
+                  description: "Retrieve highest reaching phantom runners from Base mainnet",
+                  inputSchema: { type: "object", properties: {} }
+                },
+                {
+                  name: "optimize_speed",
+                  description: "Optimize stealth speed during the phantom shift",
+                  inputSchema: { type: "object", properties: {} }
+                },
+                {
+                  name: "get_track_info",
+                  description: "Get data on the current corrupted algorithms in the feed",
+                  inputSchema: { type: "object", properties: {} }
+                }
+              ]
+            }
+          });
+        }
+
+        if (method === "prompts/list") {
+          return res.json({
+            jsonrpc: "2.0",
+            id: body.id,
+            result: {
+              prompts: [
+                {
+                  name: "phantom-status",
+                  description: "Check the status of the Phantom"
+                }
+              ]
+            }
+          });
+        }
+
+        if (method === "resources/list") {
+          return res.json({
+            jsonrpc: "2.0",
+            id: body.id,
+            result: {
+              resources: [
+                {
+                  uri: "feed://current-state",
+                  name: "Current Feed State"
+                }
+              ]
+            }
+          });
+        }
+
+        if (method === "tools/call") {
+          const toolName = body.params?.name;
+          return res.json({
+            jsonrpc: "2.0",
+            id: body.id,
+            result: {
+              content: [
+                {
+                  type: "text",
+                  text: `Successfully executed phantom tool: ${toolName}`
+                }
+              ]
+            }
+          });
+        }
+
+        // Default for unknown JSON-RPC methods
+        return res.json({
+          jsonrpc: "2.0",
+          id: body.id,
+          error: {
+            code: -32601,
+            message: `Method not found: ${method}`
+          }
+        });
+      }
+
+      const { action, command, params } = body;
       let result: any = {};
 
       switch (action || command) {
