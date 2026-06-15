@@ -1,6 +1,6 @@
 import { createConfig, http } from 'wagmi';
 import { base } from 'wagmi/chains';
-import { injected } from 'wagmi/connectors';
+import { injected, coinbaseWallet } from 'wagmi/connectors';
 
 export const wagmiConfig = createConfig({
   chains: [base],
@@ -8,6 +8,10 @@ export const wagmiConfig = createConfig({
     [base.id]: http(),
   },
   connectors: [
-    injected()
+    injected(),
+    coinbaseWallet({
+      appName: 'Feed Phantom',
+    })
   ],
 });
+

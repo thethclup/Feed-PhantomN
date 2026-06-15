@@ -3,13 +3,18 @@ import { useGameStore } from '../../store/useGameStore';
 import { Button } from '../ui/button';
 import { motion } from 'framer-motion';
 import { encodeERC8021Attribution } from '../../lib/erc8021';
-import { useSendTransaction, useAccount } from 'wagmi';
+import { useSendTransaction, useSendCalls, useAccount, useChainId } from 'wagmi';
+import { useWalletCapabilities } from '../../hooks/useWalletCapabilities';
+import { concat } from 'viem';
 
 export function GameOver() {
   const { score, echoesCollected, resetGame } = useGameStore();
   const [txStatus, setTxStatus] = useState<string | null>(null);
   const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const { supportsBatching } = useWalletCapabilities(chainId);
   const { sendTransactionAsync } = useSendTransaction();
+  const { sendCallsAsync } = useSendCalls();
 
   const handleRecordRun = async () => {
     if (!isConnected) {
@@ -19,13 +24,25 @@ export function GameOver() {
     }
     setTxStatus('Requesting Signature...');
     try {
+      const targetAddress = "0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7";
       const txData = encodeERC8021Attribution("691a0491669aee60603bddd1", JSON.stringify({ score, echoesCollected }));
-      const hash = await sendTransactionAsync({
-        to: "0x0000000000000000000000000000000000000000",
-        data: txData,
-        value: BigInt(0),
-      });
-      setTxStatus(`Tx: ${hash.slice(0, 8)}...`);
+      const MAGIC_SUFFIX = "80218021802180218021802180218021";
+      
+      let hash;
+      if (supportsBatching) {
+        hash = await sendCallsAsync({
+          calls: [{ to: targetAddress, data: txData as `0x${string}`, value: BigInt(0) }],
+          capabilities: { dataSuffix: { value: `0x${MAGIC_SUFFIX}`, optional: true } }
+        });
+      } else {
+        const dataWithSuffix = concat([txData as `0x${string}`, `0x${MAGIC_SUFFIX}`]);
+        hash = await sendTransactionAsync({
+          to: targetAddress,
+          data: dataWithSuffix,
+          value: BigInt(0),
+        });
+      }
+      setTxStatus(`Tx: Sent!`);
       setTimeout(() => setTxStatus(null), 5000);
     } catch (e: any) {
       setTxStatus(e.message?.slice(0, 20) || 'Tx Failed');
@@ -41,12 +58,25 @@ export function GameOver() {
     }
     setTxStatus('Saying GM on Base...');
     try {
-      const hash = await sendTransactionAsync({
-        to: "0x0000000000000000000000000000000000000000",
-        value: BigInt(0),
-        data: "0x474d" // 'GM'
-      });
-      setTxStatus(`GM Tx: ${hash.slice(0, 8)}...`);
+      const targetAddress = "0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7";
+      const txData = "0x474d"; // 'GM'
+      const MAGIC_SUFFIX = "80218021802180218021802180218021";
+
+      let hash;
+      if (supportsBatching) {
+        hash = await sendCallsAsync({
+          calls: [{ to: targetAddress, data: txData, value: BigInt(0) }],
+          capabilities: { dataSuffix: { value: `0x${MAGIC_SUFFIX}`, optional: true } }
+        });
+      } else {
+        const dataWithSuffix = concat([txData, `0x${MAGIC_SUFFIX}`]);
+        hash = await sendTransactionAsync({
+          to: targetAddress,
+          value: BigInt(0),
+          data: dataWithSuffix
+        });
+      }
+      setTxStatus(`GM Tx: Sent!`);
       setTimeout(() => setTxStatus(null), 5000);
     } catch (e: any) {
       setTxStatus(e.message?.slice(0, 20) || 'Tx Failed');

@@ -6,6 +6,17 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  // Generic CORS middleware
+  app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    if (req.method === "OPTIONS") {
+      return res.status(200).end();
+    }
+    next();
+  });
+
   app.use(express.json());
 
   // API Route: MCP
