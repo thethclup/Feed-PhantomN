@@ -63,7 +63,15 @@ export default function handler(req: any, res: any) {
     switch (action || command) {
       case "status":
       case "ping":
-        result = { status: "online", agent: "Feed Phantom Orchestrator", message: "Phantom mode active - undetectable" };
+        result = {
+          status: "online",
+          agent: "Feed Phantom Orchestrator",
+          network: "base-mainnet",
+          chainId: 8453,
+          consensus: "denim-200ms",
+          blockTimeMs: 200,
+          message: "Phantom mode active - Base Mainnet Denim (200ms canonical blocks)"
+        };
         break;
       case "execute":
         result = { success: true, action: command || params, executedAt: new Date().toISOString(), message: "Phantom feed command executed successfully" };
@@ -73,6 +81,10 @@ export default function handler(req: any, res: any) {
           name: "Feed Phantom Orchestrator",
           wallet: "0xe157F1F5e12adB38Ba013683E9Ce24efe21e5bA6",
           platform: "Base",
+          network: "base-mainnet",
+          chainId: 8453,
+          upgrade: "denim",
+          blockTimeMs: 200,
           version: "1.0.0"
         };
         break;

@@ -1,7 +1,12 @@
-// ERC-8021 Implementation Stub
-// For detailed attribution of the stealth runner game interaction
+import { concat, stringToHex, toHex } from 'viem';
 
-export const BUILDER_CODE = "bc_h5lelcls";
+export const BUILDER_CODE = 'bc_h5lelcls';
+export const FEED_PHANTOM_APP_ID = '691a0491669aee60603bddd1';
+export const FEED_PHANTOM_TARGET_ADDRESS =
+  '0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7' as const;
+
+const ERC8021_SCHEMA_ID = '0x00' as const;
+const ERC8021_MAGIC_BYTES = '0x80218021802180218021802180218021' as const;
 
 export interface TransactionAttribution {
   attributionCode: string;
@@ -9,25 +14,43 @@ export interface TransactionAttribution {
 }
 
 /**
- * Encodes the ERC-8021 structured attribution data into hex for transaction data.
+ * Builds an ERC-8021 dataSuffix from the registered Base Builder Code.
+ * Format: <1-byte length><ascii code><0x00 schema><16-byte repeating 0x8021>
+ */
+export function buildERC8021DataSuffix(builderCode: string = BUILDER_CODE): `0x${string}` {
+  const codeHex = stringToHex(builderCode);
+  const byteLength = (codeHex.length - 2) / 2;
+  const lengthHex = toHex(byteLength, { size: 1 });
+  return concat([lengthHex, codeHex, ERC8021_SCHEMA_ID, ERC8021_MAGIC_BYTES]);
+}
+
+export const ERC8021_DATA_SUFFIX = buildERC8021DataSuffix(BUILDER_CODE);
+
+/**
+ * Encodes the run attribution payload into calldata hex for Base Mainnet.
  */
 export function encodeERC8021Attribution(appId: string, actionData: string): `0x${string}` {
-  // In a real implementation, this would use viem's encodeAbiParameters
-  // matching the ERC-8021 standard functions.
-  // Returns a dummy hex for preview purposes.
-  console.log(`[ERC-8021] Encoding attribution for appId: ${appId}, Builder: ${BUILDER_CODE}`);
-  return "0x1234567890abcdef";
+  const payload = JSON.stringify({
+    appId,
+    builder: BUILDER_CODE,
+    data: JSON.parse(actionData),
+  });
+  return stringToHex(payload);
 }
 
 /**
- * Generate a complete transaction request for saving a score to base mainnet.
+ * Generates a Base Mainnet transaction request for recording a score with ERC-8021 suffix.
  */
 export function buildScoreTransaction(score: number, echoes: number, playerAddress: string) {
-  const attributionData = encodeERC8021Attribution("691a0491669aee60603bddd1", JSON.stringify({ score, echoes }));
-  
+  const payloadHex = encodeERC8021Attribution(
+    FEED_PHANTOM_APP_ID,
+    JSON.stringify({ score, echoes, playerAddress })
+  );
+
   return {
-    to: "0x0000000000000000000000000000000000000000" as `0x${string}`, // Example Contract
-    data: attributionData,
+    to: FEED_PHANTOM_TARGET_ADDRESS,
+    data: concat([payloadHex, ERC8021_DATA_SUFFIX]),
     value: BigInt(0),
   };
 }
+

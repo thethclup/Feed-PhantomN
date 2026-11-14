@@ -1,7 +1,16 @@
-import React from 'react';
-import { WagmiProvider, useAccount, useSendTransaction, useSendCalls, useChainId } from 'wagmi';
+import React, { useEffect, useState } from 'react';
+import {
+  WagmiProvider,
+  useAccount,
+  useChainId,
+  useSendCalls,
+  useSendTransaction,
+  useSwitchChain,
+  useWaitForCallsStatus,
+  useWaitForTransactionReceipt,
+} from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { wagmiConfig } from './lib/web3';
+import { BASE_MAINNET_CHAIN_ID, BASESCAN_URL, wagmiConfig } from './lib/web3';
 import { GameCanvas } from './game/GameCanvas';
 import { MainMenu } from './components/views/MainMenu';
 import { HUD } from './components/views/HUD';
@@ -9,63 +18,118 @@ import { GameOver } from './components/views/GameOver';
 import { useGameStore } from './store/useGameStore';
 import { Sun } from 'lucide-react';
 import { useWalletCapabilities } from './hooks/useWalletCapabilities';
-import { encodeFunctionData, toHex, stringToHex, concat } from 'viem';
+import { concat } from 'viem';
+import { ERC8021_DATA_SUFFIX, FEED_PHANTOM_TARGET_ADDRESS } from './lib/erc8021';
 
 const queryClient = new QueryClient();
-
-// Ensure suffix ends with repeating 8021
-const BUILDER_CODE = "[BUILDER_CODE]";
-const ATTRIBUTION_CODE = "[ATTRIBUTION_CODE]";
-const MAGIC_SUFFIX = "80218021802180218021802180218021"; // Sample 8021 repeating properly
 
 function AppContent() {
   const { gameState } = useGameStore();
   const { isConnected } = useAccount();
   const chainId = useChainId();
-  const { supportsBatching } = useWalletCapabilities(chainId);
-  
-  const { sendTransactionAsync } = useSendTransaction();
-  const { sendCallsAsync } = useSendCalls();
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const { supportsBatching } = useWalletCapabilities(BASE_MAINNET_CHAIN_ID);
+
+  const { sendTransactionAsync, isPending: isSendingTx } = useSendTransaction();
+  const { sendCallsAsync, isPending: isSendingCalls } = useSendCalls();
+
+  const [gmStatus, setGmStatus] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>(undefined);
+  const [callsId, setCallsId] = useState<string | undefined>(undefined);
+  const [confirmedHash, setConfirmedHash] = useState<`0x${string}` | undefined>(undefined);
+
+  const { isLoading: isConfirmingTx, isSuccess: isTxConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+    chainId: BASE_MAINNET_CHAIN_ID,
+  });
+
+  const {
+    data: callsStatus,
+    isLoading: isConfirmingCalls,
+    isSuccess: isCallsConfirmed,
+  } = useWaitForCallsStatus({
+    id: callsId,
+  });
+
+  useEffect(() => {
+    if (isTxConfirmed && txHash) {
+      setConfirmedHash(txHash);
+      setTxHash(undefined);
+      setGmStatus('GM Confirmed!');
+      const timer = setTimeout(() => {
+        setGmStatus(null);
+        setConfirmedHash(undefined);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isTxConfirmed, txHash]);
+
+  useEffect(() => {
+    if (isCallsConfirmed) {
+      const receiptHash = callsStatus?.receipts?.[0]?.transactionHash;
+      if (receiptHash) setConfirmedHash(receiptHash);
+      setCallsId(undefined);
+      setGmStatus('GM Confirmed!');
+      const timer = setTimeout(() => {
+        setGmStatus(null);
+        setConfirmedHash(undefined);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isCallsConfirmed, callsStatus]);
+
+  const isWrongNetwork = isConnected && chainId !== BASE_MAINNET_CHAIN_ID;
+  const isBusy = isSendingTx || isSendingCalls || isConfirmingTx || isConfirmingCalls;
 
   const sendGMTransaction = async () => {
+    if (!isConnected) return;
+    if (isWrongNetwork) {
+      switchChain({ chainId: BASE_MAINNET_CHAIN_ID });
+      return;
+    }
+
+    setConfirmedHash(undefined);
+    setTxHash(undefined);
+    setCallsId(undefined);
+    setGmStatus('Confirm in Wallet...');
+
     try {
-      if (!isConnected) return;
-      
-      const targetAddress = "0xc35B9997B63B1CE14f8F513f7eddD9a7ABbB33d7";
-      const txDataBase = "0x474d"; // 'GM' in hex
+      const txDataBase = '0x474d' as const; // 'GM' in hex
 
       if (supportsBatching) {
-        // Smart Wallet via EIP-5792
-        await sendCallsAsync({
+        const result = await sendCallsAsync({
           calls: [
             {
-              to: targetAddress,
+              to: FEED_PHANTOM_TARGET_ADDRESS,
               data: txDataBase,
-              value: BigInt(0)
-            }
+              value: BigInt(0),
+            },
           ],
+          chainId: BASE_MAINNET_CHAIN_ID,
           capabilities: {
             dataSuffix: {
-              value: `0x${MAGIC_SUFFIX}`,
-              optional: true
-            }
-          }
+              value: ERC8021_DATA_SUFFIX,
+              optional: true,
+            },
+          },
         });
+        setCallsId(result.id);
+        setGmStatus('Confirming (~200ms)...');
       } else {
-        // EOA Fallback - manually concatenate the suffix onto the calldata
-        const dataWithSuffix = concat([txDataBase, `0x${MAGIC_SUFFIX}`]);
-        
-        await sendTransactionAsync({
-          to: targetAddress,
+        const dataWithSuffix = concat([txDataBase, ERC8021_DATA_SUFFIX]);
+        const hash = await sendTransactionAsync({
+          to: FEED_PHANTOM_TARGET_ADDRESS,
           value: BigInt(0),
-          data: dataWithSuffix
+          data: dataWithSuffix,
+          chainId: BASE_MAINNET_CHAIN_ID,
         });
+        setTxHash(hash);
+        setGmStatus('Confirming (~200ms)...');
       }
-      
-      alert('GM Transaction Successful!');
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('Tx Failed');
+      setGmStatus(e?.shortMessage || 'Tx Failed');
+      setTimeout(() => setGmStatus(null), 3500);
     }
   };
 
@@ -81,14 +145,37 @@ function AppContent() {
 
       {/* Persistent GM Button overlay -> only if connected */}
       {isConnected && (
-        <div className="absolute top-4 right-4 z-50">
+        <div className="absolute top-4 right-4 z-50 flex flex-col items-end gap-2">
           <button
             onClick={sendGMTransaction}
-            className="px-3 py-2 rounded-lg bg-[#E8A020]/20 hover:bg-[#E8A020]/30 border border-[#E8A020]/40 text-[#E8A020] transition-colors flex items-center gap-2 font-['Cinzel'] text-xs font-bold"
+            disabled={isBusy || isSwitching}
+            className="px-3 py-2 rounded-lg bg-[#E8A020]/20 hover:bg-[#E8A020]/30 disabled:opacity-60 border border-[#E8A020]/40 text-[#E8A020] transition-colors flex items-center gap-2 font-['Cinzel'] text-xs font-bold"
           >
             <Sun size={14} />
-            Say GM
+            {isWrongNetwork
+              ? isSwitching
+                ? 'Switching...'
+                : 'Switch to Base'
+              : isBusy
+              ? gmStatus || 'Confirming...'
+              : 'Say GM'}
           </button>
+
+          {gmStatus && (
+            <div className="px-2.5 py-1.5 rounded bg-[#0a0a0a]/90 border border-[#ffffff1a] font-mono text-[10px] text-[#00FF00] flex flex-col items-end gap-0.5">
+              <span>{gmStatus}</span>
+              {confirmedHash && (
+                <a
+                  href={`${BASESCAN_URL}/tx/${confirmedHash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[9px] text-[#E8A020] underline"
+                >
+                  Basescan
+                </a>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

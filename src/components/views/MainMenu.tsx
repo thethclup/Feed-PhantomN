@@ -2,16 +2,21 @@ import React from 'react';
 import { useGameStore } from '../../store/useGameStore';
 import { Button } from '../ui/button';
 import { motion } from 'framer-motion';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { useAccount, useChainId, useConnect, useDisconnect, useSwitchChain } from 'wagmi';
+import { BASE_MAINNET_CHAIN_ID } from '../../lib/web3';
 
 export function MainMenu() {
   const { setGameState } = useGameStore();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, isConnecting, isReconnecting } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
+  const chainId = useChainId();
+  const { switchChain, isPending: isSwitching } = useSwitchChain();
+
+  const isWrongNetwork = isConnected && chainId !== BASE_MAINNET_CHAIN_ID;
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -27,24 +32,59 @@ export function MainMenu() {
             FEED PHANTOM
           </h1>
           <p className="text-[10px] text-[#ffffff66] uppercase tracking-[0.2em]">
-            v1.0.4 // Base Mainnet Active
+            v1.0.4 // Base Mainnet · Denim 200ms
           </p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           {/* Action Panel */}
           <div className="bg-[#0a0a0a] border border-[#ffffff1a] rounded-xl p-4 flex flex-col gap-3 justify-center">
-            <Button onClick={() => setGameState('playing')} className="w-full h-12 bg-[#BC13FE] text-black font-bold text-[10px] uppercase rounded hover:bg-white transition-colors border-none tracking-widest shadow-[0_0_15px_rgba(188,19,254,0.3)]">
+            <Button
+              onClick={() => setGameState('playing')}
+              className="w-full h-12 bg-[#BC13FE] text-black font-bold text-[10px] uppercase rounded hover:bg-white transition-colors border-none tracking-widest shadow-[0_0_15px_rgba(188,19,254,0.3)]"
+            >
               Initiate Run
             </Button>
-            
-            <Button 
-              variant="phantom" 
-              onClick={() => isConnected ? disconnect() : connect({ connector: connectors[0] })} 
-              className="w-full text-[10px] uppercase tracking-widest bg-transparent border-[#ffffff1a] text-[#00FF00] hover:bg-[#ffffff05]"
-            >
-              {isConnected ? `Wallet: ${address?.slice(0, 6)}...${address?.slice(-4)}` : 'Connect Wallet'}
-            </Button>
+
+            {isReconnecting ? (
+              <div className="w-full py-2.5 text-center text-[10px] uppercase tracking-widest border border-[#ffffff1a] rounded text-[#ffffff88]">
+                Reconnecting...
+              </div>
+            ) : isConnected ? (
+              <div className="flex flex-col gap-2">
+                {isWrongNetwork && (
+                  <Button
+                    variant="phantom"
+                    onClick={() => switchChain({ chainId: BASE_MAINNET_CHAIN_ID })}
+                    disabled={isSwitching}
+                    className="w-full text-[10px] uppercase tracking-widest bg-[#FF003C]/10 border-[#FF003C]/50 text-[#FF003C] hover:bg-[#FF003C]/20"
+                  >
+                    {isSwitching ? 'Switching...' : 'Switch to Base Mainnet'}
+                  </Button>
+                )}
+                <Button
+                  variant="phantom"
+                  onClick={() => disconnect()}
+                  className="w-full text-[10px] uppercase tracking-widest bg-transparent border-[#ffffff1a] text-[#00FF00] hover:bg-[#ffffff05]"
+                >
+                  Wallet: {address?.slice(0, 6)}...{address?.slice(-4)}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {connectors.map((connector) => (
+                  <Button
+                    key={connector.uid}
+                    variant="phantom"
+                    onClick={() => connect({ connector })}
+                    disabled={isConnecting}
+                    className="w-full text-[10px] uppercase tracking-widest bg-transparent border-[#ffffff1a] text-[#00FF00] hover:bg-[#ffffff05]"
+                  >
+                    {isConnecting ? 'Connecting...' : `Connect ${connector.name}`}
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Info Panel / Instructions */}
@@ -75,3 +115,4 @@ export function MainMenu() {
     </motion.div>
   );
 }
+

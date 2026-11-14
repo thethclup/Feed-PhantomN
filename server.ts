@@ -181,7 +181,11 @@ async function startServer() {
           result = { 
             status: "online", 
             agent: "Feed Phantom Orchestrator",
-            message: "Phantom mode active - undetectable" 
+            network: "base-mainnet",
+            chainId: 8453,
+            consensus: "denim-200ms",
+            blockTimeMs: 200,
+            message: "Phantom mode active - Base Mainnet Denim (200ms canonical blocks)" 
           };
           break;
 
@@ -199,6 +203,11 @@ async function startServer() {
             name: "Feed Phantom Orchestrator",
             wallet: "0xe157F1F5e12adB38Ba013683E9Ce24efe21e5bA6",
             platform: "Base",
+            network: "base-mainnet",
+            chainId: 8453,
+            upgrade: "denim",
+            blockTimeMs: 200,
+            rpcUrl: process.env.BASE_MAINNET_RPC_URL || "https://mainnet.base.org",
             version: "1.0.0"
           };
           break;
@@ -227,12 +236,44 @@ async function startServer() {
   });
 
   // API Route: Agent
-  app.get("/api/agent", (req, res) => {
+  app.get("/api/agent", async (req, res) => {
+    const rpcUrl = process.env.BASE_MAINNET_RPC_URL || "https://mainnet.base.org";
+    let latestCanonicalBlock: string | null = null;
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 1500);
+      const rpcRes = await fetch(rpcUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "eth_blockNumber",
+          params: [],
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (rpcRes.ok) {
+        const data = (await rpcRes.json()) as { result?: string };
+        if (data?.result) {
+          latestCanonicalBlock = parseInt(data.result, 16).toString();
+        }
+      }
+    } catch {
+      // Canonical RPC lookup is best-effort
+    }
+
     res.json({
       name: "Feed Phantom Orchestrator",
       status: "active",
       wallet: "0xe157F1F5e12adB38Ba013683E9Ce24efe21e5bA6",
       platform: "Feed Phantom",
+      network: "base-mainnet",
+      chainId: 8453,
+      upgrade: "denim",
+      blockTimeMs: 200,
+      latestCanonicalBlock,
       version: "1.0.0"
     });
   });
